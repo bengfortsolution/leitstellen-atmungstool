@@ -53,6 +53,60 @@ Die Atemfrequenz gehört zu den wichtigsten Vitalparametern. Auffällige Werte k
 > Der Alarm stoppt automatisch, sobald wieder ein Atemzug erfasst wird.  
 > (Optional kann man das später auf „Quittieren erforderlich“ umbauen, wenn gewünscht.)
 
+
+📊 Schwellenwerte Atemfrequenz (RR)
+👤 Erwachsene
+Bereich	Atemfrequenz (/min)	Bedeutung
+🔴 Kritisch niedrig	< 6	Hochgradig auffällig, vitale Gefährdung möglich
+🟡 Niedrig	6–9	Bradypnoe, Kontext prüfen
+🟢 Normal	12–20	Erwartbarer Ruhebereich
+🟡 Erhöht	21–30	Tachypnoe, mögliche Belastung / Dyspnoe
+🔴 Sehr hoch	> 30	Deutlich auffällig, schwere Atemnot möglich
+
+Frühwarnung:
+🔴 Kein Atemzug seit ≥ 10 Sekunden
+
+👶 Kinder (altersabhängig)
+Säugling (1–12 Monate)
+Bereich	Atemfrequenz (/min)
+🔴 Deutlich zu niedrig	< 24
+🟢 Normal	30–53
+🔴 Deutlich zu hoch	> 63
+
+Frühwarnung: ≥ 10 Sekunden kein Atemzug
+
+Kleinkind (1–2 Jahre)
+Bereich	Atemfrequenz (/min)
+🔴 Deutlich zu niedrig	< 16
+🟢 Normal	22–37
+🔴 Deutlich zu hoch	> 47
+
+Frühwarnung: ≥ 10 Sekunden kein Atemzug
+
+Vorschulkind (3–5 Jahre)
+Bereich	Atemfrequenz (/min)
+🔴 Deutlich zu niedrig	< 14
+🟢 Normal	20–29
+🔴 Deutlich zu hoch	> 39
+
+Frühwarnung: ≥ 10 Sekunden kein Atemzug
+
+Schulkind (6–12 Jahre)
+Bereich	Atemfrequenz (/min)
+🔴 Deutlich zu niedrig	< 12
+🟢 Normal	18–25
+🔴 Deutlich zu hoch	> 35
+
+Frühwarnung: ≥ 10 Sekunden kein Atemzug
+
+Jugendliche (13–17 Jahre)
+Bereich	Atemfrequenz (/min)
+🔴 Deutlich zu niedrig	< 8
+🟢 Normal	12–20
+🔴 Deutlich zu hoch	> 30
+
+Frühwarnung: ≥ 10 Sekunden kein Atemzug
+
 ---
 
 
