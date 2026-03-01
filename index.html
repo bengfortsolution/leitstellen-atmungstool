@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Atemfrequenz Tool</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <main class="app" role="application" aria-label="Atemfrequenz Tool">
+    <header class="top">
+      <div class="title">
+        <h1>Atemfrequenz</h1>
+        <p class="subtitle">Schnell zählen • Früherkennung • Leitstelle</p>
+      </div>
+
+      <section class="profile" aria-label="Patientengruppe">
+        <div class="segmented" role="tablist" aria-label="Patientengruppe">
+          <button id="tab-adult" class="seg-btn active" role="tab" aria-selected="true">Erwachsene</button>
+          <button id="tab-child" class="seg-btn" role="tab" aria-selected="false">Kind</button>
+        </div>
+
+        <div id="child-age-wrap" class="child-age hidden">
+          <label for="child-age" class="label">Altersgruppe (Kind)</label>
+          <select id="child-age" class="select">
+            <option value="infant">Säugling (1–12 Monate)</option>
+            <option value="toddler">Kleinkind (1–2 Jahre)</option>
+            <option value="preschool">Vorschulkind (3–5 Jahre)</option>
+            <option value="school" selected>Schulkind (6–12 Jahre)</option>
+            <option value="adolescent">Jugendliche (13–17 Jahre)</option>
+          </select>
+          <div class="hint small">
+            Tipp: Bei Kindern möglichst 60 Sekunden zählen (Atmung variiert stärker).
+          </div>
+        </div>
+      </section>
+    </header>
+
+    <section class="grid">
+      <section class="card big">
+        <div class="metrics">
+          <div class="metric">
+            <div class="metric-label">Atemfrequenz</div>
+            <div class="metric-value">
+              <span id="rr-value">—</span>
+              <span class="unit">/min</span>
+            </div>
+            <div id="rr-quality" class="badge">Warten auf Messung</div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Zeit seit Start</div>
+            <div class="metric-value small-mono" id="t-since-start">00:00</div>
+            <div class="metric-label mt">Seit letztem Atemzug</div>
+            <div class="metric-value small-mono" id="t-since-last">—</div>
+          </div>
+        </div>
+
+        <!-- Deutliches Warnbanner -->
+        <div id="alert" class="alert hidden" role="status" aria-live="assertive"></div>
+
+        <div class="actions">
+          <button id="breath" class="btn primary" autofocus>
+            Atemzug erfassen <span class="kbd">Leertaste</span>
+          </button>
+          <button id="undo" class="btn ghost" title="Letzten Atemzug entfernen">
+            Rückgängig <span class="kbd">U</span>
+          </button>
+          <button id="reset" class="btn danger">
+            Reset <span class="kbd">R</span>
+          </button>
+        </div>
+
+        <div class="hint">
+          <strong>Bedienung:</strong> Leertaste = Atemzug • U = Rückgängig • R = Reset
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>Verlauf</h2>
+          <p class="small">Abstände zwischen Atemzügen (Sek.)</p>
+        </div>
+
+        <div class="spark-wrap">
+          <canvas id="spark" width="640" height="180" aria-label="Verlauf Atemzug-Abstände"></canvas>
+        </div>
+
+        <div class="rows">
+          <div class="row">
+            <span>Gezählte Atemzüge</span>
+            <span class="mono" id="count">0</span>
+          </div>
+          <div class="row">
+            <span>Letzter Abstand (s)</span>
+            <span class="mono" id="interval">—</span>
+          </div>
+          <div class="row">
+            <span>Hinweis</span>
+            <span class="small" id="method-hint">Tippe jeden Atemzug. Das Tool schätzt früh und wird mit Zeit stabiler.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>Bewertung</h2>
+          <p class="small">Ampel + Handlungshinweis</p>
+        </div>
+
+        <div class="traffic">
+          <div class="lamp" id="lamp" aria-hidden="true"></div>
+          <div>
+            <div class="traffic-title" id="traffic-title">—</div>
+            <div class="traffic-text" id="traffic-text">Starte mit dem ersten Atemzug.</div>
+          </div>
+        </div>
+
+        <details class="details">
+          <summary>Grenzwerte ansehen</summary>
+          <div class="small" id="thresholds"></div>
+          <div class="small muted">
+            Hinweis: Bei unregelmäßiger Atmung ist eine längere Messdauer (bis 60 Sekunden) zuverlässiger.
+          </div>
+        </details>
+      </section>
+    </section>
+
+    <footer class="footer small muted">
+      Fokus: schnelle Erfassung + Früherkennung, z. B. „kein Atemzug seit X Sekunden“.
+    </footer>
+  </main>
+
+  <script>
+    // =========================
+    // UI
+    // =========================
+    const UI = {
+      tabAdult: document.getElementById('tab-adult'),
+      tabChild: document.getElementById('tab-child'),
+      childAgeWrap: document.getElementById('child-age-wrap'),
+      childAge: document.getElementById('child-age'),
+
+      rrValue: document.getElementById('rr-value'),
+      rrQuality: document.getElementById('rr-quality'),
+      tSinceStart: document.getElementById('t-since-start'),
+      tSinceLast: document.getElementById('t-since-last'),
+
+      breath: document.getElementById('breath'),
+      undo: document.getElementById('undo'),
+      reset: document.getElementById('reset'),
+
+      alert: document.getElementById('alert'),
+
+      lamp: document.getElementById('lamp'),
+      trafficTitle: document.getElementById('traffic-title'),
+      trafficText: document.getElementById('traffic-text'),
+
+      count: document.getElementById('count'),
+      interval: document.getElementById('interval'),
+      methodHint: document.getElementById('method-hint'),
+      thresholds: document.getElementById('thresholds'),
+
+      spark: document.getElementById('spark'),
+    };
+
+    const ctx = UI.spark.getContext('2d');
+
+    // =========================
+    // State
+    // =========================
+    let profil = 'adult';      // 'adult' | 'child'
+    let startTime = null;      // ms
+    let atemzuege = [];        // ms timestamps
+    let tickTimer = null;
+
+    // Alarm state
+    let alarmAktiv = false;
+    let alarmTimer = null;
+    let audioCtx = null;
+    const normalTitle = document.title;
+
+    // =========================
+    // Evidenzbasierte Default-Referenzen (operational)
+    // =========================
+    // Erwachsene: pragmatische Bereiche für Leitstellen-UI (Ruhe ~12-20)
+    const ERWACHSENE = {
+      kritNiedrig: 6,
+      niedrig: 10,
+      normalMin: 12,
+      normalMax: 20,
+      sehrHoch: 30,
+      apnoeSek: 10, // Früherkennung: kein Atemzug seit 10s
+    };
+
+    // Kinder: Normbereiche nach Altersgruppe (PALS-Referenzwerte)
+    const KIND_RR = {
+      infant:     { normalMin: 30, normalMax: 53, label: 'Säugling (1–12 Monate): 30–53/min' },
+      toddler:    { normalMin: 22, normalMax: 37, label: 'Kleinkind (1–2 Jahre): 22–37/min' },
+      preschool:  { normalMin: 20, normalMax: 29, label: 'Vorschulkind (3–5 Jahre): 20–29/min' },
+      school:     { normalMin: 18, normalMax: 25, label: 'Schulkind (6–12 Jahre): 18–25/min' },
+      adolescent: { normalMin: 12, normalMax: 20, label: 'Jugendliche (13–17 Jahre): 12–20/min' },
+    };
+
+    const KIND = {
+      apnoeSek: 10, // als sehr auffällige Frühwarnung
+    };
+
+    function aktuellerKinderbereich() {
+      const key = UI.childAge.value;
+      return KIND_RR[key] || KIND_RR.school;
+    }
+
+    // =========================
+    // Helpers
+    // =========================
+    const pad2 = (n) => String(n).padStart(2, '0');
+
+    function fmtMMSS(ms) {
+      const s = Math.max(0, Math.floor(ms / 1000));
+      const mm = Math.floor(s / 60);
+      const ss = s % 60;
+      return `${pad2(mm)}:${pad2(ss)}`;
+    }
+
+    function now() { return Date.now(); }
+
+    function median(arr) {
+      if (!arr.length) return null;
+      const a = [...arr].sort((x,y) => x-y);
+      const mid = Math.floor(a.length / 2);
+      return a.length % 2 ? a[mid] : (a[mid - 1] + a[mid]) / 2;
+    }
+
+    function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+    // =========================
+    // RR berechnen
+    // =========================
+    function abstaendeSek() {
+      const out = [];
+      for (let i = 1; i < atemzuege.length; i++) {
+        out.push((atemzuege[i] - atemzuege[i - 1]) / 1000);
+      }
+      return out;
+    }
+
+    function berechneRR() {
+      if (!startTime || atemzuege.length < 2) {
+        return { rr: null, guete: 'Warten auf Messung', rrGesamt: null, rrAktuell: null };
+      }
+
+      const elapsed = (now() - startTime) / 1000; // sec
+      const rrGesamt = (atemzuege.length / (elapsed / 60));
+
+      const intervals = abstaendeSek();
+      const lastN = intervals.slice(-3);
+      const med = median(lastN);
+      const rrAktuell = med ? (60 / med) : null;
+
+      let rr = rrAktuell ?? rrGesamt;
+      if (rrAktuell && elapsed >= 20) {
+        const w = clamp((elapsed - 20) / 40, 0, 1); // 0..1 von 20s..60s
+        rr = rrAktuell * (1 - w) + rrGesamt * w;
+      }
+
+      let guete = 'Schätzung';
+      if (elapsed >= 60) guete = 'Stabil (≥60s)';
+      else if (elapsed >= 30) guete = 'Gut (≥30s)';
+      else if (atemzuege.length >= 4) guete = 'Vorläufig';
+      else guete = 'Sehr früh';
+
+      return { rr, guete, rrGesamt, rrAktuell };
+    }
+
+    // =========================
+    // Ampel / Bewertung
+    // =========================
+    function setLamp(level) {
+      UI.lamp.classList.remove('green','yellow','red','gray');
+      UI.lamp.classList.add(level);
+    }
+
+    function setAlert(html, kind = 'danger') {
+      UI.alert.classList.remove('hidden','danger','warning','ok','alarm');
+      UI.alert.classList.add(kind);
+      UI.alert.innerHTML = html;
+    }
+
+    function clearAlert() {
+      UI.alert.classList.add('hidden');
+      UI.alert.innerHTML = '';
+      UI.alert.classList.remove('danger','warning','ok','alarm');
+    }
+
+    function updateGrenzwerteUI() {
+      if (profil === 'adult') {
+        UI.thresholds.innerHTML = `
+          <div><strong>Erwachsene (Richtwerte):</strong></div>
+          <ul>
+            <li><strong>Frühwarnung:</strong> ≥${ERWACHSENE.apnoeSek}s ohne Atemzug</li>
+            <li><strong>Kritisch niedrig:</strong> &lt;${ERWACHSENE.kritNiedrig}/min</li>
+            <li><strong>Niedrig:</strong> ${ERWACHSENE.kritNiedrig}–${ERWACHSENE.niedrig - 1}/min</li>
+            <li><strong>Normal:</strong> ${ERWACHSENE.normalMin}–${ERWACHSENE.normalMax}/min</li>
+            <li><strong>Erhöht:</strong> ${ERWACHSENE.normalMax + 1}–${ERWACHSENE.sehrHoch}/min</li>
+            <li><strong>Sehr hoch:</strong> &gt;${ERWACHSENE.sehrHoch}/min</li>
+          </ul>
+        `;
+      } else {
+        const r = aktuellerKinderbereich();
+        UI.thresholds.innerHTML = `
+          <div><strong>Kind:</strong> ${r.label}</div>
+          <ul>
+            <li><strong>Frühwarnung:</strong> ≥${KIND.apnoeSek}s ohne Atemzug</li>
+            <li><strong>Normal:</strong> ${r.normalMin}–${r.normalMax}/min</li>
+            <li>Abweichungen stets im Kontext bewerten (Fieber, Unruhe, Belastung etc.).</li>
+          </ul>
+        `;
+      }
+    }
+
+    function bewerteUndZeige(rr) {
+      if (rr == null) {
+        setLamp('gray');
+        UI.trafficTitle.textContent = '—';
+        UI.trafficText.textContent = 'Starte mit dem ersten Atemzug.';
+        return;
+      }
+
+      if (profil === 'adult') {
+        if (rr < ERWACHSENE.kritNiedrig) {
+          setLamp('red');
+          UI.trafficTitle.textContent = 'Kritisch niedrige Atmung';
+          UI.trafficText.textContent = 'Sehr auffällig. Situationsgerecht handeln.';
+          return;
+        }
+        if (rr < ERWACHSENE.niedrig) {
+          setLamp('yellow');
+          UI.trafficTitle.textContent = 'Niedrige Atmung';
+          UI.trafficText.textContent = 'Vermindert. Engmaschig bewerten; Kontext beachten.';
+          return;
+        }
+        if (rr >= ERWACHSENE.normalMin && rr <= ERWACHSENE.normalMax) {
+          setLamp('green');
+          UI.trafficTitle.textContent = 'Normbereich';
+          UI.trafficText.textContent = 'Im erwartbaren Bereich.';
+          return;
+        }
+        if (rr > ERWACHSENE.sehrHoch) {
+          setLamp('red');
+          UI.trafficTitle.textContent = 'Sehr hohe Atemfrequenz';
+          UI.trafficText.textContent = 'Deutlich erhöht. Weitere Abklärung/Handlung nach Protokoll.';
+          return;
+        }
+        setLamp('yellow');
+        UI.trafficTitle.textContent = 'Erhöhte Atemfrequenz';
+        UI.trafficText.textContent = 'Erhöht. Kontext beachten (Schmerz, Angst, Fieber, Atemnot).';
+        return;
+      }
+
+      // Kind
+      const r = aktuellerKinderbereich();
+      if (rr < Math.max(6, r.normalMin - 6)) {
+        setLamp('red');
+        UI.trafficTitle.textContent = 'Auffällig niedrige Atmung (Kind)';
+        UI.trafficText.textContent = 'Niedrig für Altersgruppe. Warnzeichen beachten.';
+        return;
+      }
+      if (rr > r.normalMax + 10) {
+        setLamp('red');
+        UI.trafficTitle.textContent = 'Auffällig hohe Atmung (Kind)';
+        UI.trafficText.textContent = 'Deutlich erhöht für Altersgruppe. Weitere Bewertung erforderlich.';
+        return;
+      }
+      if (rr < r.normalMin || rr > r.normalMax) {
+        setLamp('yellow');
+        UI.trafficTitle.textContent = 'Außerhalb Normbereich (Kind)';
+        UI.trafficText.textContent = 'Abweichung. Möglichst 60 Sekunden zählen, wenn unklar/unregelmäßig.';
+        return;
+      }
+      setLamp('green');
+      UI.trafficTitle.textContent = 'Normbereich (Kind)';
+      UI.trafficText.textContent = 'Im erwartbaren Bereich für Altersgruppe.';
+    }
+
+    // =========================
+    // Alarm: sichtbar + hörbar
+    // =========================
+    function initAudioIfNeeded() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      // In manchen Browsern startet AudioContext "suspended"
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+    }
+
+    function beep(durationMs = 120, frequency = 880) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'square';
+      osc.frequency.value = frequency;
+
+      const t0 = audioCtx.currentTime;
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(0.18, t0 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + durationMs / 1000);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(t0);
+      osc.stop(t0 + durationMs / 1000 + 0.02);
+    }
+
+    function startAlarm() {
+      if (alarmAktiv) return;
+      alarmAktiv = true;
+
+      // Optik
+      UI.alert.classList.add('alarm');
+      document.body.classList.add('page-alarm');
+      document.title = '🚨 WARNUNG – Atemfrequenz Tool';
+
+      // Ton
+      initAudioIfNeeded();
+      // Sofort ein Signal + wiederholen
+      try { beep(140, 880); } catch {}
+      alarmTimer = setInterval(() => {
+        // Doppel-Beep für bessere Wahrnehmung
+        try { beep(120, 880); } catch {}
+        setTimeout(() => { try { beep(120, 740); } catch {} }, 180);
+      }, 1400);
+    }
+
+    function stopAlarm() {
+      if (!alarmAktiv) return;
+      alarmAktiv = false;
+
+      document.body.classList.remove('page-alarm');
+      document.title = normalTitle;
+
+      if (alarmTimer) clearInterval(alarmTimer);
+      alarmTimer = null;
+
+      UI.alert.classList.remove('alarm');
+    }
+
+    function apnoeSek() {
+      return profil === 'adult' ? ERWACHSENE.apnoeSek : KIND.apnoeSek;
+    }
+
+    function checkKeinAtemzug() {
+      if (!startTime || atemzuege.length === 0) return;
+
+      const last = atemzuege[atemzuege.length - 1];
+      const seitLetztemSec = (now() - last) / 1000;
+
+      UI.tSinceLast.textContent = `${seitLetztemSec.toFixed(0)}s`;
+
+      if (seitLetztemSec >= apnoeSek()) {
+        // HARTE rote Warnung + Alarm
+        setAlert(
+          `<div class="alert-title">KEIN ATEMZUG SEIT ${seitLetztemSec.toFixed(0)} SEKUNDEN</div>
+           <div class="alert-body">
+             Wenn bewusstlos / keine normale Atmung: <strong>Telefonreanimation / Reanimation anleiten</strong> (nach SOP).
+           </div>`,
+          'danger'
+        );
+        startAlarm();
+        setLamp('red');
+      } else {
+        // Alarm aus, sobald wieder geatmet wird / Zeitraum wieder ok
+        stopAlarm();
+      }
+    }
+
+    // =========================
+    // Sparkline
+    // =========================
+    function drawSpark(intervals) {
+      const w = UI.spark.width;
+      const h = UI.spark.height;
+      ctx.clearRect(0, 0, w, h);
+
+      ctx.globalAlpha = 1;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(16, h - 18);
+      ctx.lineTo(w - 10, h - 18);
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+      ctx.stroke();
+
+      if (!intervals.length) {
+        ctx.fillStyle = 'rgba(255,255,255,0.65)';
+        ctx.font = '14px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+        ctx.fillText('Noch kein Verlauf – tippe Atemzüge.', 18, 28);
+        return;
+      }
+
+      const maxShow = 16;
+      const data = intervals.slice(-maxShow);
+
+      const minV = Math.max(0.5, Math.min(...data) - 0.5);
+      const maxV = Math.max(...data) + 0.5;
+
+      const x0 = 16, y0 = 12, x1 = w - 10, y1 = h - 18;
+      const dx = (x1 - x0) / Math.max(1, data.length - 1);
+
+      function y(val) {
+        const t = (val - minV) / (maxV - minV || 1);
+        return y1 - t * (y1 - y0);
+      }
+
+      ctx.beginPath();
+      data.forEach((v, i) => {
+        const px = x0 + i * dx;
+        const py = y(v);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      });
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      data.forEach((v, i) => {
+        const px = x0 + i * dx;
+        const py = y(v);
+        ctx.beginPath();
+        ctx.arc(px, py, 3, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        ctx.fill();
+      });
+
+      const last = data[data.length - 1];
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      ctx.font = '12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+      ctx.fillText(`letzter Abstand: ${last.toFixed(1)}s`, 18, h - 26);
+    }
+
+    // =========================
+    // Render loop
+    // =========================
+    function render() {
+      if (startTime) UI.tSinceStart.textContent = fmtMMSS(now() - startTime);
+      else {
+        UI.tSinceStart.textContent = '00:00';
+        UI.tSinceLast.textContent = '—';
+      }
+
+      UI.count.textContent = String(atemzuege.length);
+
+      const intervals = abstaendeSek();
+      UI.interval.textContent = intervals.length ? intervals[intervals.length - 1].toFixed(1) : '—';
+      drawSpark(intervals);
+
+      const { rr, guete } = berechneRR();
+      UI.rrQuality.textContent = guete;
+
+      if (rr == null) {
+        UI.rrValue.textContent = '—';
+        bewerteUndZeige(null);
+      } else {
+        UI.rrValue.textContent = rr.toFixed(0);
+        bewerteUndZeige(rr);
+      }
+
+      updateGrenzwerteUI();
+      checkKeinAtemzug();
+
+      if (profil === 'child') {
+        UI.methodHint.textContent = 'Kinder: möglichst 60 Sekunden zählen, da Atmung stärker variiert.';
+      } else {
+        UI.methodHint.textContent = 'Erwachsene: Tool schätzt früh; bei Unregelmäßigkeit länger zählen.';
+      }
+    }
+
+    function startTick() {
+      if (tickTimer) return;
+      tickTimer = setInterval(render, 200);
+    }
+
+    function stopTick() {
+      if (tickTimer) clearInterval(tickTimer);
+      tickTimer = null;
+    }
+
+    // =========================
+    // Actions
+    // =========================
+    function ensureStarted() {
+      if (!startTime) {
+        startTime = now();
+        startTick();
+      }
+    }
+
+    function addBreath() {
+      // Audio darf erst nach Interaktion starten
+      initAudioIfNeeded();
+
+      ensureStarted();
+      atemzuege.push(now());
+
+      // Sobald wieder Atemzug erkannt -> Alarm sicher aus + Banner weg (falls nur "kein Atemzug" aktiv war)
+      stopAlarm();
+      clearAlert();
+
+      render();
+    }
+
+    function undoBreath() {
+      if (atemzuege.length > 0) atemzuege.pop();
+      // Alarm-Logik wird im render neu bewertet
+      render();
+    }
+
+    function resetAll() {
+      stopTick();
+      stopAlarm();
+      startTime = null;
+      atemzuege = [];
+      clearAlert();
+      UI.rrValue.textContent = '—';
+      UI.rrQuality.textContent = 'Warten auf Messung';
+      setLamp('gray');
+      UI.trafficTitle.textContent = '—';
+      UI.trafficText.textContent = 'Starte mit dem ersten Atemzug.';
+      render();
+    }
+
+    function setProfil(next) {
+      profil = next;
+      const isAdult = profil === 'adult';
+
+      UI.tabAdult.classList.toggle('active', isAdult);
+      UI.tabAdult.setAttribute('aria-selected', String(isAdult));
+      UI.tabChild.classList.toggle('active', !isAdult);
+      UI.tabChild.setAttribute('aria-selected', String(!isAdult));
+
+      UI.childAgeWrap.classList.toggle('hidden', isAdult);
+
+      // Keine Messung löschen, nur Grenzwerte/Label ändern
+      render();
+    }
+
+    // =========================
+    // Events
+    // =========================
+    UI.breath.addEventListener('click', addBreath);
+    UI.undo.addEventListener('click', undoBreath);
+    UI.reset.addEventListener('click', resetAll);
+
+    UI.tabAdult.addEventListener('click', () => setProfil('adult'));
+    UI.tabChild.addEventListener('click', () => setProfil('child'));
+    UI.childAge.addEventListener('change', render);
+
+    document.addEventListener('keydown', (e) => {
+      const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+      const inInput = tag === 'select' || tag === 'input' || tag === 'textarea';
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        addBreath();
+      } else if (!inInput && (e.key === 'r' || e.key === 'R')) {
+        e.preventDefault();
+        resetAll();
+      } else if (!inInput && (e.key === 'u' || e.key === 'U')) {
+        e.preventDefault();
+        undoBreath();
+      }
+    });
+
+    // Init
+    resetAll();
+  </script>
+</body>
+</html>
