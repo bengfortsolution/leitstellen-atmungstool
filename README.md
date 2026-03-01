@@ -54,59 +54,97 @@ Die Atemfrequenz gehört zu den wichtigsten Vitalparametern. Auffällige Werte k
 > (Optional kann man das später auf „Quittieren erforderlich“ umbauen, wenn gewünscht.)
 
 
-📊 Schwellenwerte Atemfrequenz (RR)
-👤 Erwachsene
-Bereich	Atemfrequenz (/min)	Bedeutung
-🔴 Kritisch niedrig	< 6	Hochgradig auffällig, vitale Gefährdung möglich
-🟡 Niedrig	6–9	Bradypnoe, Kontext prüfen
-🟢 Normal	12–20	Erwartbarer Ruhebereich
-🟡 Erhöht	21–30	Tachypnoe, mögliche Belastung / Dyspnoe
-🔴 Sehr hoch	> 30	Deutlich auffällig, schwere Atemnot möglich
 
-Frühwarnung:
+# 📊 Schwellenwerte Atemfrequenz (RR)
+
+Diese Tabelle dient als Referenz für das Atmungstool.  
+Die Bewertung ersetzt **keine medizinische Gesamtbeurteilung** und erfolgt stets im Kontext.
+
+---
+
+## 👤 Erwachsene
+
+| Bereich | Atemfrequenz (/min) | Bewertung |
+|----------|--------------------|------------|
+| 🔴 Kritisch niedrig | < 6 | Hochgradig auffällig, vitale Gefährdung möglich |
+| 🟡 Niedrig | 6–9 | Bradypnoe, Kontext prüfen |
+| 🟢 Normal | 12–20 | Erwartbarer Ruhebereich |
+| 🟡 Erhöht | 21–30 | Tachypnoe, mögliche Belastung / Dyspnoe |
+| 🔴 Sehr hoch | > 30 | Deutlich auffällig, schwere Atemnot möglich |
+
+**Frühwarnung:**  
 🔴 Kein Atemzug seit ≥ 10 Sekunden
 
-👶 Kinder (altersabhängig)
-Säugling (1–12 Monate)
-Bereich	Atemfrequenz (/min)
-🔴 Deutlich zu niedrig	< 24
-🟢 Normal	30–53
-🔴 Deutlich zu hoch	> 63
+---
 
-Frühwarnung: ≥ 10 Sekunden kein Atemzug
+## 👶 Kinder (altersabhängig)
 
-Kleinkind (1–2 Jahre)
-Bereich	Atemfrequenz (/min)
-🔴 Deutlich zu niedrig	< 16
-🟢 Normal	22–37
-🔴 Deutlich zu hoch	> 47
+### Säugling (1–12 Monate)
 
-Frühwarnung: ≥ 10 Sekunden kein Atemzug
+| Bereich | Atemfrequenz (/min) | Bewertung |
+|----------|--------------------|------------|
+| 🔴 Deutlich zu niedrig | < 24 | Bradypnoe, hoch auffällig |
+| 🟢 Normal | 30–53 | Altersentsprechend |
+| 🔴 Deutlich zu hoch | > 63 | Deutlich erhöhte Atemfrequenz |
 
-Vorschulkind (3–5 Jahre)
-Bereich	Atemfrequenz (/min)
-🔴 Deutlich zu niedrig	< 14
-🟢 Normal	20–29
-🔴 Deutlich zu hoch	> 39
+**Frühwarnung:** Kein Atemzug seit ≥ 10 Sekunden
 
-Frühwarnung: ≥ 10 Sekunden kein Atemzug
+---
 
-Schulkind (6–12 Jahre)
-Bereich	Atemfrequenz (/min)
-🔴 Deutlich zu niedrig	< 12
-🟢 Normal	18–25
-🔴 Deutlich zu hoch	> 35
+### Kleinkind (1–2 Jahre)
 
-Frühwarnung: ≥ 10 Sekunden kein Atemzug
+| Bereich | Atemfrequenz (/min) | Bewertung |
+|----------|--------------------|------------|
+| 🔴 Deutlich zu niedrig | < 16 | Bradypnoe |
+| 🟢 Normal | 22–37 | Altersentsprechend |
+| 🔴 Deutlich zu hoch | > 47 | Deutlich erhöhte Atemfrequenz |
 
-Jugendliche (13–17 Jahre)
-Bereich	Atemfrequenz (/min)
-🔴 Deutlich zu niedrig	< 8
-🟢 Normal	12–20
-🔴 Deutlich zu hoch	> 30
+**Frühwarnung:** Kein Atemzug seit ≥ 10 Sekunden
 
-Frühwarnung: ≥ 10 Sekunden kein Atemzug
+---
 
+### Vorschulkind (3–5 Jahre)
+
+| Bereich | Atemfrequenz (/min) | Bewertung |
+|----------|--------------------|------------|
+| 🔴 Deutlich zu niedrig | < 14 | Bradypnoe |
+| 🟢 Normal | 20–29 | Altersentsprechend |
+| 🔴 Deutlich zu hoch | > 39 | Deutlich erhöhte Atemfrequenz |
+
+**Frühwarnung:** Kein Atemzug seit ≥ 10 Sekunden
+
+---
+
+### Schulkind (6–12 Jahre)
+
+| Bereich | Atemfrequenz (/min) | Bewertung |
+|----------|--------------------|------------|
+| 🔴 Deutlich zu niedrig | < 12 | Bradypnoe |
+| 🟢 Normal | 18–25 | Altersentsprechend |
+| 🔴 Deutlich zu hoch | > 35 | Deutlich erhöhte Atemfrequenz |
+
+**Frühwarnung:** Kein Atemzug seit ≥ 10 Sekunden
+
+---
+
+### Jugendliche (13–17 Jahre)
+
+| Bereich | Atemfrequenz (/min) | Bewertung |
+|----------|--------------------|------------|
+| 🔴 Deutlich zu niedrig | < 8 | Bradypnoe |
+| 🟢 Normal | 12–20 | Altersentsprechend |
+| 🔴 Deutlich zu hoch | > 30 | Deutlich erhöhte Atemfrequenz |
+
+**Frühwarnung:** Kein Atemzug seit ≥ 10 Sekunden
+
+---
+
+## 🧠 Hinweise zur Messung
+
+- Bei regelmäßiger Atmung: 30 Sekunden zählen und hochrechnen möglich  
+- Bei unregelmäßiger Atmung: möglichst 60 Sekunden vollständig zählen  
+- Bewertung immer im Kontext (Fieber, Belastung, Schlaf, Medikamente, Intoxikation etc.)  
+- Die 10-Sekunden-Schwelle ist eine Frühwarnung, keine alleinige Diagnose
 ---
 
 
